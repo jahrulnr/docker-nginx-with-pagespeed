@@ -24,4 +24,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY rev-proxy.conf.tmpl /etc/nginx/conf.d/
 
 CMD ["/bin/bash", "-c", \
-  "[[ $PROXY_PASS ]] && envsubst '$PROXY_PASS' < /etc/nginx/conf.d/rev-proxy.conf.tmpl > /etc/nginx/conf.d/rev-proxy.conf; exec nginx -g 'daemon off;'"]
+  "[[ $PROXY_PASS ]] && envsubst '$PROXY_PASS' < /etc/nginx/conf.d/rev-proxy.conf.tmpl > /etc/nginx/conf.d/default.conf; exec nginx -g 'daemon off;'"]
