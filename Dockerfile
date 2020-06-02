@@ -21,4 +21,7 @@ FROM nginx
 COPY --from=compiler /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=compiler /etc/ssl/certs /etc/ssl/certs
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY local-proxy.conf.tmpl /etc/nginx/conf.d/
+COPY rev-proxy.conf.tmpl /etc/nginx/conf.d/
+
+CMD ["/bin/bash", "-c", \
+  "[[ $PROXY_PASS ]] && envsubst '$PROXY_PASS' < /etc/nginx/conf.d/rev-proxy.conf.tmpl > /etc/nginx/conf.d/rev-proxy.conf; exec nginx -g 'daemon off;'"]
