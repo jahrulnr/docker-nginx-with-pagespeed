@@ -9,7 +9,7 @@ Using the [offical nginx](https://hub.docker.com/_/nginx) as a baseimage, this i
 
 Examples:
 
-1. A secure, optimized reverse proxy using pagespeed to another docker service
+1. A secure, optimized reverse proxy using pagespeed to another docker service. Remeber to allow insecure localhost. It will vary by browser, but try [chrome://flags/#allow-insecure-localhost](chrome://flags/#allow-insecure-localhost) for chrome or `--ignore-certificate-errors` in headless mode.
 
 ```
 docker run -e PROXY_PASS=http://host.docker.internal:3000 -p 443:443 pmetpublic/nginx-with-pagespeed
