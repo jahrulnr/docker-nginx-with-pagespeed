@@ -46,8 +46,8 @@ jobs:
 
       - name: Build image
         run: |
-        docker images
-        docker build . --file Dockerfile --tag $IMAGE_NAME
+          docker images
+          docker build . --file Dockerfile --tag $IMAGE_NAME
 
       - name: Log into registry
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u keithbentrup --password-stdin
