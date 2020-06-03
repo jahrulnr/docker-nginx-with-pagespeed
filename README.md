@@ -1,3 +1,5 @@
+![Docker badge](https://github.com/PMET-public/docker-nginx-with-pagespeed/workflows/build%20and%20publish%20to%20Docker%20Hub/badge.svg?branch=master)
+
 # docker-nginx-with-pagespeed
 
 Using the [offical nginx](https://hub.docker.com/_/nginx) as a baseimage, this image adds a few useful features/optimizations:
