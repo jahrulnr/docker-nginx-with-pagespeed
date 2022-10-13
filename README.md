@@ -5,8 +5,8 @@
 Using the [offical nginx](https://hub.docker.com/_/nginx) as a baseimage, this image adds a few useful features/optimizations:
 
 * [Pagespeed](https://www.modpagespeed.com/doc/build_ngx_pagespeed_from_source) to act as a CDN / web optimizer
-* a self-signed cert and insecure private key for testing @ `/etc/ssl/certs/self.[key,crt]`
-* a preconfigured reverse proxy template that interpolates a `LISTENING_PORT` and `PROXY_PASS` env vars
+* a self-signed cert and insecure private key for testing `/etc/ssl/certs/self.[key,crt]`
+* a preconfigured reverse proxy template that interpolates the `PROXY_PASS` env var
 * multi-stage build process to keep the image slim
 
 Examples:
@@ -23,4 +23,25 @@ docker run -v /your-nginx.conf:/etc/nginx/conf.d/your-nginx.conf \
   -v /your-certs:/etc/ssl/certs \
   -p 443:443 \
   pmetpublic/nginx-with-pagespeed
+```
+
+3. As a docker compose service:
+```
+  proxy:
+    image: pmet-public/nginx-with-pagespeed:1.1
+    container_name: ps-proxy
+    environment:
+      - PROXY_PASS
+    ports:
+      - '$LISTENING_PORT:443'
+    volumes:
+      - $FULLCHAIN_PATH:/etc/ssl/certs/self.crt
+      - $PRIVKEY_PATH:/etc/ssl/certs/self.key
+```
+where your `.env` file might look like:
+```
+PROXY_PASS=http://my-service-container:8080
+LISTENING_PORT=443
+FULLCHAIN_PATH=/etc/letsencrypt/live/my-domain.com/fullchain.pem
+PRIVKEY_PATH=/etc/letsencrypt/live/my-domain.com/privkey.pem
 ```
