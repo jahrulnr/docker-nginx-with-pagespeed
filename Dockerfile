@@ -1,6 +1,5 @@
 ARG NGINX_VERSION=1.23.1
 
-# based on https://github.com/apache/incubator-pagespeed-ngx/issues/1213
 FROM nginx:$NGINX_VERSION as builder
 ARG TARGETARCH
 COPY incubator-pagespeed-mod-aarch64.patch /
@@ -10,11 +9,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   apt-get update && apt-get upgrade -y
   apt-get install -y sudo vim curl build-essential zlib1g-dev libpcre3-dev unzip wget uuid-dev libssl-dev git python gperf rsync
 
+  # get the nginx pagespeed module source used by later steps
   git clone https://github.com/apache/incubator-pagespeed-ngx.git
 
+  # build or download the PageSpeed Optimization Libraries (PSOL) based on arch
   if [ "$TARGETARCH" = "arm64" ]; then
 
-    # build and configure PageSpeed Optimization Libraries (PSOL) for arm64
+    # build and configure PSOL for arm64
     git clone https://github.com/apache/incubator-pagespeed-mod.git
     cd incubator-pagespeed-mod
     git reset --hard
@@ -54,17 +55,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ./configure --add-dynamic-module=/incubator-pagespeed-ngx --with-compat
   make
 
+  # create a self-signed key for convenience
   openssl req  -nodes -new -x509  -keyout /etc/ssl/certs/self.key -out /etc/ssl/certs/self.crt -subj '/CN=self'
 
 EOF
 
 FROM nginx:$NGINX_VERSION as final
 ARG NGINX_VERSION
-# COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=builder /nginx-$NGINX_VERSION/objs/ngx_pagespeed.so /usr/lib/nginx/modules/
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+# nginx.conf based on https://github.com/apache/incubator-pagespeed-ngx/issues/1213
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY rev-proxy.conf.tmpl /etc/nginx/conf.d/
-
-CMD ["/bin/bash", "-c", \
-  "[[ $PROXY_PASS ]] && envsubst '$PROXY_PASS' < /etc/nginx/conf.d/rev-proxy.conf.tmpl > /etc/nginx/conf.d/default.conf; exec nginx -g 'daemon off;'"]
+COPY rev-proxy.conf.template /etc/nginx/templates/
+ENV PROXY_PASS http://127.0.0.1:80
