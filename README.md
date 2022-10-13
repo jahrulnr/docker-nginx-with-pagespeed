@@ -6,7 +6,7 @@ Using the [offical nginx](https://hub.docker.com/_/nginx) as a baseimage, this i
 
 * [Pagespeed](https://www.modpagespeed.com/doc/build_ngx_pagespeed_from_source) to act as a CDN / web optimizer
 * a self-signed cert and insecure private key for testing @ `/etc/ssl/certs/self.[key,crt]`
-* a preconfigured reverse proxy template that interpolates a `PROXY_PASS` env var
+* a preconfigured reverse proxy template that interpolates a `LISTENING_PORT` and `PROXY_PASS` env vars
 * multi-stage build process to keep the image slim
 
 Examples:
