@@ -6,8 +6,10 @@ Using the [offical nginx](https://hub.docker.com/_/nginx) as a baseimage, this i
 
 * [Pagespeed](https://www.modpagespeed.com/doc/build_ngx_pagespeed_from_source) to act as a CDN / web optimizer
 * a self-signed cert and insecure private key for testing `/etc/ssl/certs/self.[key,crt]`
-* a preconfigured reverse proxy template that interpolates the `PROXY_PASS` env var
+* a preconfigured reverse proxy template that interpolates the `PROXY_PASS` and `SERVER_NAME` env vars
 * multi-stage build process to keep the image slim
+
+If `SERVER_NAME` is specified, only that name will be proxied, and other domains will receive a 444 response. If it's not specified, any domain will be forwarded to `PROXY_PASS`.
 
 Examples:
 
@@ -32,6 +34,7 @@ docker run -v /your-nginx.conf:/etc/nginx/conf.d/your-nginx.conf \
     container_name: ps-proxy
     environment:
       - PROXY_PASS
+      - SERVER_NAME
     ports:
       - '$LISTENING_PORT:443'
     volumes:
@@ -41,6 +44,7 @@ docker run -v /your-nginx.conf:/etc/nginx/conf.d/your-nginx.conf \
 where your `.env` file might look like:
 ```
 PROXY_PASS=http://my-service-container:8080
+SERVER_NAME=my-domain.com
 LISTENING_PORT=443
 FULLCHAIN_PATH=/etc/letsencrypt/live/my-domain.com/fullchain.pem
 PRIVKEY_PATH=/etc/letsencrypt/live/my-domain.com/privkey.pem
