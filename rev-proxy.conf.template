@@ -1,16 +1,20 @@
 server {
-  listen 80 default_server;
-  return 301 https://$host$request_uri;
-}
-
-server {
-  listen 443 ssl http2 default_server;
-  server_name _;
+  listen 80;
+  listen 443 ssl http2;
+  server_name $SERVER_NAME;
   ssl_certificate /etc/ssl/certs/self.crt;
   ssl_certificate_key /etc/ssl/certs/self.key;
   location / {
-    proxy_pass ${PROXY_PASS};
+    proxy_pass $PROXY_PASS;
     proxy_set_header Host $http_host;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
+}
+
+server {
+    listen 80 default_server;
+    listen 443 ssl default_server;
+    ssl_certificate /etc/ssl/certs/self.crt;
+    ssl_certificate_key /etc/ssl/certs/self.key;
+    return 444;
 }
