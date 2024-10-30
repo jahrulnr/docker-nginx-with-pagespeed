@@ -1,6 +1,6 @@
 ARG NGINX_VERSION=1.26.2
 
-FROM nginx:$NGINX_VERSION as builder
+FROM debian:bullseye as builder
 ARG TARGETARCH
 COPY incubator-pagespeed-mod-aarch64.patch /
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
