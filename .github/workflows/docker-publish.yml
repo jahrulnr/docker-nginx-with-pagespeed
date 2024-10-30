@@ -1,76 +1,63 @@
-name: build and publish to Docker Hub
-
-on:
-  push:
-    # Publish `master` as Docker `latest` image.
-    branches:
-      # disable while ARM builds are unsupported
-      - none
-
-    # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
-
-  # Run tests for any PRs.
-  pull_request:
+name: Nginx-PageSpeed Build
 
 env:
-  IMAGE_NAME: image
+  IMAGE_NAME: nginx-pagespeed
+
+on: 
+  push:
+  workflow_dispatch:
 
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
+  build-amd64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
+      - uses: actions/checkout@v3
+
+      # Set ENV
+      - name: Set dynamic env
         run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            docker build . --file Dockerfile
-          fi
+          echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
-    # Ensure test job passes before pushing image.
-    needs: test
+      # Build Docker image and Export
+      - name: Build & export docker image
+        run: |
+          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:amd64 --platform amd64 .
+          mkdir -p images
+          docker save ${{ env.IMAGE_NAME }} | gzip > images/${{ env.IMAGE_NAME }}.tar.gz
 
+      # Upload to artifact
+      - name: Upload Image to artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.date_today }} - ${{ env.IMAGE_NAME }} - Docker Image AMD64
+          path: images/${{ env.IMAGE_NAME }}.tar.gz
+
+  build-arm64:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
-
-      - name: Log into registry
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u keithbentrup --password-stdin
-
-      - name: Push image
+      # Set ENV
+      - name: Set dynamic env
         run: |
-          # Clean up org, repo, & image name
-          read -r IMAGE_ORG IMAGE_REPO <<<$(echo ${{ github.repository }} | sed 's/\// /')
-          IMAGE_ORG=$(echo $IMAGE_ORG | sed 's/-//g')
-          IMAGE_REPO=$(echo $IMAGE_REPO | sed 's/^docker-//')
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ORG/$IMAGE_REPO | tr '[A-Z]' '[a-z]')
+          echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+      # Build Docker image and Export
+      - name: Build & export docker image
+        run: |
+          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:arm64 --platform arm64 .
+          mkdir -p images
+          docker save ${{ env.IMAGE_NAME }} | gzip > images/${{ env.IMAGE_NAME }}.tar.gz
 
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+      # Upload to artifact
+      - name: Upload Image to artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.date_today }} - ${{ env.IMAGE_NAME }} - Docker Image ARM64
+          path: images/${{ env.IMAGE_NAME }}.tar.gz
