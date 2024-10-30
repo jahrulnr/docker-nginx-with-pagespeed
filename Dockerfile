@@ -69,3 +69,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY rev-proxy.conf.template /etc/nginx/templates/
 ENV PROXY_PASS "http://127.0.0.1:8080"
 ENV SERVER_NAME "~^.*\$"
+ 
