@@ -22,7 +22,7 @@ jobs:
       # Build Docker image and Export
       - name: Build & export docker image
         run: |
-          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:amd64 --platform amd64 .
+          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:amd64 --platform amd64 . --build-arg "TARGETARCH=amd64"
           mkdir -p images
           docker save ${{ env.IMAGE_NAME }} | gzip > images/${{ env.IMAGE_NAME }}.tar.gz
 
@@ -51,7 +51,7 @@ jobs:
       # Build Docker image and Export
       - name: Build & export docker image
         run: |
-          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:arm64 --platform arm64 .
+          docker build -f Dockerfile --tag ${{ env.IMAGE_NAME }}:arm64 --platform arm64 . --build-arg "TARGETARCH=arm64"
           mkdir -p images
           docker save ${{ env.IMAGE_NAME }} | gzip > images/${{ env.IMAGE_NAME }}.tar.gz
 
