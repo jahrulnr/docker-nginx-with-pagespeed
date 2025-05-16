@@ -28,7 +28,7 @@ jobs:
 
       # Upload to artifact
       - name: Upload Image to artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - ${{ env.IMAGE_NAME }} - Docker Image AMD64
           path: images/${{ env.IMAGE_NAME }}.tar.gz
@@ -57,7 +57,7 @@ jobs:
 
       # Upload to artifact
       - name: Upload Image to artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - ${{ env.IMAGE_NAME }} - Docker Image ARM64
           path: images/${{ env.IMAGE_NAME }}.tar.gz
