@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked <<EOF
 
   apt-get update && apt-get upgrade -y
-  apt-get install -y sudo vim curl build-essential zlib1g-dev libpcre3-dev unzip wget uuid-dev libssl-dev git python gperf rsync
+  apt-get install -y sudo vim curl build-essential zlib1g-dev libpcre3-dev unzip wget uuid-dev libssl-dev git python gperf rsync libbrotli-dev
 
   # get the nginx pagespeed module source used by later steps
   git clone https://github.com/apache/incubator-pagespeed-ngx.git
@@ -47,12 +47,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
   fi
 
+  git clone --recursive https://github.com/google/ngx_brotli.git /ngx_brotli
   # build dynamic nginx pagespeed module
   cd /
   wget http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz
   tar xvf nginx-$NGINX_VERSION.tar.gz
   cd nginx-$NGINX_VERSION
-  ./configure --add-dynamic-module=/incubator-pagespeed-ngx --with-compat
+  ./configure \
+  --add-dynamic-module=/incubator-pagespeed-ngx \
+  --add-dynamic-module=/ngx_brotli \
+  --with-compat
   make
 
   # create a self-signed key for convenience
@@ -64,6 +68,9 @@ FROM nginx:$NGINX_VERSION as final
 ARG NGINX_VERSION
 COPY --from=builder /nginx-$NGINX_VERSION/objs/ngx_pagespeed.so /usr/lib/nginx/modules/
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+COPY --from=builder /nginx-$NGINX_VERSION/objs/ngx_http_brotli_filter_module.so /usr/lib/nginx/modules/
+COPY --from=builder /nginx-$NGINX_VERSION/objs/ngx_http_brotli_static_module.so /usr/lib/nginx/modules/
+
 # nginx.conf based on https://github.com/apache/incubator-pagespeed-ngx/issues/1213
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY rev-proxy.conf.template /etc/nginx/templates/
