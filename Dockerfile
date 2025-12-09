@@ -1,6 +1,6 @@
 ARG NGINX_VERSION=1.26.2
 
-FROM debian:bullseye as builder
+FROM debian:bookworm-slim as builder
 ARG NGINX_VERSION
 ARG TARGETARCH
 COPY incubator-pagespeed-mod-aarch64.patch /
